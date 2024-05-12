@@ -37,6 +37,7 @@ async function run() {
     try {
 
         const mainProductColection = client.db('defarentproduct').collection('mainproduct')
+        const recommendProductColection = client.db('defarentproduct').collection('recommendProduct')
 
         app.post('/product', async (req, res) => {
             const data = req.body;
@@ -85,6 +86,14 @@ async function run() {
             const result = await mainProductColection.deleteOne(query);
             res.send(result)
 
+        })
+
+        // recommend 
+
+        app.post('/recommendation', async(req, res)=>{
+            const data = req.body;
+            const result = await recommendProductColection.insertOne(data)
+            res.send(result)
         })
 
 
