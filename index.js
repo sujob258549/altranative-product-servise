@@ -19,7 +19,7 @@ app.use(cors({
 console.log(process.env.DB_PASS, process.env.DB_USER);
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@atlascluster.aasa6jh.mongodb.net/?retryWrites=true&w=majority&appName=AtlasCluster`;
 
 // const uri = "mongodb+srv://assinment-11-defarent-product:jgFEqTjSFoh9jleD@atlascluster.aasa6jh.mongodb.net/?retryWrites=true&w=majority&appName=AtlasCluster";
@@ -44,6 +44,40 @@ async function run() {
             res.send(result)
         })
 
+
+        app.get('/product', async (req, res) => {
+            const result = await mainProductColection.find().toArray();
+            res.send(result)
+        })
+
+        app.get('/product/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await mainProductColection.findOne(query)
+            res.send(result)
+        })
+
+        app.put('/product/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const data = req.body;
+            const option = { upsert: true }
+            const updateDoc = {
+                $set: {
+                    name: data.name,
+                    brandName: data.brandName,
+                    queeryTitle: data.queeryTitle,
+                    photourl: data.photourl,
+                    text_area: data.text_area,
+                    userEmail: data.userData.userEmail,
+                    userName: data.userData.userName,
+                    namuserPhotoUrle: data.userData.userPhotoUrl,
+                    timeAndDate: data.userData.userData,
+                }
+            }
+            const result = await mainProductColection.updateOne(filter, updateDoc, option);
+            res.send(result)
+        })
 
 
 
