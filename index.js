@@ -8,7 +8,8 @@ require("dotenv").config()
 app.use(express.json());
 app.use(cors({
     origin: [
-        'http://localhost:5173'
+        'http://localhost:5173',
+        'https://alternative-product-11.web.app'
     ],
     credentials: true
 }))
@@ -90,12 +91,51 @@ async function run() {
 
         // recommend 
 
-        app.post('/recommendation', async(req, res)=>{
+        app.post('/recommendation', async (req, res) => {
             const data = req.body;
             const result = await recommendProductColection.insertOne(data)
             res.send(result)
         })
+        app.get('/recommendation', async (req, res) => {
+            const result = await recommendProductColection.find().toArray();
+            res.send(result)
+        })
 
+        app.get('/recommendation/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await recommendProductColection.findOne(query)
+            res.send(result)
+        })
+
+        // update recomended
+        app.patch('/recommendation/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const data = req.body;
+            const option = { upsert: true }
+            const updateDoc = {
+                $set: {
+                    rtitle: data.rtitle,
+                    rproductname: data.rtitle,
+                    photourl: data.photourl,
+                    text: data.text,
+                    timeAndDate: data.timeAndDate,
+
+                }
+            }
+            const result = await recommendProductColection.updateOne(filter, updateDoc, option);
+            res.send(result)
+        })
+
+
+        app.delete('/recommendation/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await recommendProductColection.deleteOne(query);
+            res.send(result)
+
+        })
 
         // Connect the client to the server	(optional starting in v4.7)
         // await client.connect();
