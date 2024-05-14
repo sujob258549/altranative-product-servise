@@ -3,6 +3,8 @@ const app = express()
 const cors = require('cors');
 const port = process.env.PORT || 3000
 require("dotenv").config()
+const jwt = require('jsonwebtoken');
+const cookiparser = require('cookie-parser');
 
 
 app.use(express.json());
@@ -40,6 +42,53 @@ async function run() {
         const mainProductColection = client.db('defarentproduct').collection('mainproduct')
         const recommendProductColection = client.db('defarentproduct').collection('recommendProduct')
 
+        const logger = (req, res, next) => {
+            console.log('info', req.method, req.url);
+            next()
+        }
+        const varification = (req, res, next) => {
+            const token = req?.cookiparse?.token;
+            if (!token) {
+                return res.status(401).send({ message: 'unauthorized access' })
+            }
+            jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+                if (err) {
+                    return res.status(401).send({ message: 'unauthorized access' })
+                }
+                req.user = decoded;
+                next();
+            })
+        }
+
+
+
+        // jwt
+        //creating Token
+
+        app.post("/jwt", async (req, res) => {
+            const user = req.body;
+            console.log("user for token", user);
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "10d" });
+            console.log(token);
+
+            res.cookie("token", token, {
+                httpOnly: true,
+                sameSite: false,
+                secure: "none"
+            }).send({ success: true });
+
+        });
+
+        //clearing Token
+        app.post("/logout", async (req, res) => {
+            const user = req.body;
+            console.log("logging out", user);
+            res
+                .clearCookie("token", { ...cookieOptions, maxAge: 0 })
+                .send({ success: true });
+        });
+
+
         app.post('/product', async (req, res) => {
             const data = req.body;
             const result = await mainProductColection.insertOne(data)
@@ -48,9 +97,26 @@ async function run() {
 
 
         app.get('/product', async (req, res) => {
-            const result = await mainProductColection.find().toArray();
+
+            const search = req.query.search
+            const email = req.query?.email;
+
+            let query = {};
+            if (email) {
+                query = { "userData.userEmail": email }
+            }
+
+            if (search) query = { queeryTitle: { $regex: search } };
+
+            console.log(email);
+
+            const result = await mainProductColection.find(query).toArray();
             res.send(result)
         })
+
+
+
+
 
         app.get('/product/:id', async (req, res) => {
             const id = req.params.id;
@@ -97,7 +163,12 @@ async function run() {
             res.send(result)
         })
         app.get('/recommendation', async (req, res) => {
-            const result = await recommendProductColection.find().toArray();
+            const email = req.query.email;
+            let query = {};
+            if (email) {
+                query = { "userData.userEmail": email }
+            }
+            const result = await recommendProductColection.find(query).toArray();
             res.send(result)
         })
 
