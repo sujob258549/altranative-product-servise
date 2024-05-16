@@ -121,8 +121,11 @@ async function run() {
             const search = req.query.search
             // console.log('user email', req.query.email);
 
+            // secrch function
             let query = {};
-            if (search) query = { queeryTitle: { $regex: search } };
+            if (search) query = {
+                name: { $regex: search, $options: 'i' }
+            };
 
             const result = await mainProductColection.find(query).toArray();
             res.send(result)
@@ -136,11 +139,11 @@ async function run() {
             console.log(req.user);
             const email = req?.query?.email;
             console.log('user email', req.query.email);
-
+            //  authintication
             if (req?.user?.email !== email) {
                 return res.status(403).send({ message: "forbedden access" })
             }
-
+            // email feltaring
             let query = {};
             if (email) {
                 query = { "userData.userEmail": email }
@@ -151,7 +154,7 @@ async function run() {
 
 
 
-
+        // spocifai product get
 
         app.get('/product/:id', async (req, res) => {
             const id = req.params.id;
@@ -160,6 +163,7 @@ async function run() {
             res.send(result)
         })
 
+        // update product
         app.put('/product/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
@@ -182,6 +186,7 @@ async function run() {
             res.send(result)
         })
 
+        //  delet single product
         app.delete('/product/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
@@ -191,18 +196,21 @@ async function run() {
         })
 
         // recommend 
-
+        // recomend add
         app.post('/recommendation', async (req, res) => {
             const data = req.body;
             const result = await recommendProductColection.insertOne(data)
             res.send(result)
         })
+
+        // recomended email get get
         app.get('/recommendation', verifyToken, async (req, res) => {
             const email = req?.query?.email;
             console.log(email, req?.query?.email);
             if (req?.user?.email !== email) {
                 return res.status(403).send({ message: "forbedden access" })
             }
+            // email filtaring
             let query = {};
             if (email) {
                 query = { "userData.userEmail": email }
@@ -210,11 +218,12 @@ async function run() {
             const result = await recommendProductColection.find(query).toArray();
             res.send(result)
         })
+        //  all recomendaction
         app.get('/recommendationme', async (req, res) => {
             const result = await recommendProductColection.find().toArray();
             res.send(result)
         })
-
+        //  spici fai recomendaction get
         app.get('/recommendation/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
@@ -242,7 +251,7 @@ async function run() {
             res.send(result)
         })
 
-
+        //  delete recomendaction
         app.delete('/recommendation/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
